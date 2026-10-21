@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sürpriz Web Sitesi</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      background-color: #000;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* Ana Ekran Konteynırı (Canvas Mantığı) */
+    .app-container {
+      position: relative;
+      width: 100vw;
+      height: 56.25vw; /* 16:9 Oranında ölçekleme */
+      max-width: 177.78vh;
+      max-height: 100vh;
+      box-shadow: 0 0 30px rgba(0,0,0,0.5);
+      background-size: cover;
+      background-position: center;
+      overflow: hidden;
+    }
+
+    /* Sayfalar */
+    .page {
+      display: none;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* Geri Dön Butonu */
+    .back-btn {
+      position: absolute;
+      top: 3%;
+      left: 3%;
+      background: rgba(255, 255, 255, 0.85);
+      color: #d63384;
+      border: 2px solid #d63384;
+      padding: 8px 18px;
+      font-size: 1.1vw;
+      font-weight: bold;
+      border-radius: 20px;
+      cursor: pointer;
+      z-index: 100;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+      background: #d63384;
+      color: white;
+      transform: scale(1.05);
+    }
+
+    /* --- SAYFA 1: ŞİFRE EKRANI (1-kilit.png) --- */
+    #page1 {
+      background-image: url('1-kilit.png');
+    }
+
+    /* Şifre Kalpleri Indicator */
+    .pin-display {
+      position: absolute;
+      top: 52%;
+      right: 6.8%;
+      width: 28%;
+      height: 10%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .heart-dot {
+      width: 20%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2vw;
+      color: transparent;
+      transition: all 0.3s ease;
+    }
+
+    .heart-dot.filled {
+      color: #ff1493;
+      text-shadow: 0 0 8px rgba(255, 20, 147, 0.8);
+      transform: scale(1.2);
+    }
+
+    /* Tuş Takımı */
+    .keypad {
+      position: absolute;
+      top: 59.5%;
+      right: 6.8%;
+      width: 28%;
+      height: 34%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-gap: 3.5%;
+    }
+
+    .key-btn {
+      background: transparent;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .key-btn:active {
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 12px;
+    }
+
+    /* --- SAYFA 2: KUTULAR (2-kutular.png) --- */
+    #page2 {
+      background-image: url('2-kutular.png');
+    }
+
+    .boxes-container {
+      position: absolute;
+      top: 56%;
+      left: 7.5%;
+      width: 85%;
+      height: 32%;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .box-clickable {
+      width: 22%;
+      height: 100%;
+      cursor: pointer;
+      border-radius: 15px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .box-clickable:hover {
+      transform: translateY(-8px) scale(1.03);
+    }
+
+    /* --- SAYFA 3: DRAGONBALL (3-dragonball.png) --- */
+    #page3 {
+      background-image: url('3-dragonball.png');
+    }
+
+    /* --- SAYFA 4: MEKTUP (4-mektup.png) --- */
+    #page4 {
+      background-image: url('4-mektup.png');
+    }
+
+    /* --- SAYFA 5: PLAYLIST (5-playlist.png) --- */
+    #page5 {
+      background-image: url('5-playlist.png');
+    }
+
+    .vinyl-click-area {
+      position: absolute;
+      top: 58.5%;
+      left: 62.6%;
+      width: 29.5vw;
+      height: 29.5vw;
+      max-width: 52.5vh;
+      max-height: 52.5vh;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .vinyl-click-area:hover {
+      transform: translate(-50%, -50%) scale(1.03);
+    }
+
+    .spinning {
+      animation: spin 3s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    /* --- SAYFA 6: OYUN (6-oyun.png) --- */
+    #page6 {
+      background-image: url('6-oyun.png');
+    }
+
+    .game-box {
+      position: absolute;
+      top: 53%;
+      left: 56%;
+      transform: translate(-50%, -50%);
+      width: 43%;
+      height: 56%;
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .game-score {
+      font-size: 2.2vw;
+      font-weight: bold;
+      color: #8b008b;
+      text-shadow: 1px 1px 2px #fff;
+      z-index: 5;
+    }
+
+    .game-win-text {
+      display: none;
+      font-size: 2.8vw;
+      font-weight: 900;
+      color: #ff1493;
+      text-align: center;
+      text-shadow: 2px 2px 4px #fff, 0 0 10px #ffb6c1;
+      animation: pulse 1s infinite alternate;
+      z-index: 10;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); }
+      100% { transform: scale(1.05); }
+    }
+
+    .floating-heart {
+      position: absolute;
+      font-size: 2.8vw;
+      cursor: pointer;
+      z-index: 6;
+      transition: transform 0.1s linear;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+
+    .floating-heart:active {
+      transform: scale(1.3);
+    }
+
+    /* Titreme Efekti (Yanlış Şifrede) */
+    .shake {
+      animation: shake 0.4s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-10px); }
+      40%, 80% { transform: translateX(10px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- SAYFA 1: ŞİFRE -->
+    <div id="page1" class="page active">
+      <div class="pin-display">
+        <div class="heart-dot" id="dot1">♥</div>
+        <div class="heart-dot" id="dot2">♥</div>
+        <div class="heart-dot" id="dot3">♥</div>
+        <div class="heart-dot" id="dot4">♥</div>
+      </div>
+      <div class="keypad">
+        <button class="key-btn" onclick="pressKey('1')"></button>
+        <button class="key-btn" onclick="pressKey('2')"></button>
+        <button class="key-btn" onclick="pressKey('3')"></button>
+        <button class="key-btn" onclick="pressKey('4')"></button>
+        <button class="key-btn" onclick="pressKey('5')"></button>
+        <button class="key-btn" onclick="pressKey('6')"></button>
+        <button class="key-btn" onclick="pressKey('7')"></button>
+        <button class="key-btn" onclick="pressKey('8')"></button>
+        <button class="key-btn" onclick="pressKey('9')"></button>
+        <button class="key-btn" onclick="pressKey('X')"></button>
+        <button class="key-btn" onclick="pressKey('0')"></button>
+        <button class="key-btn" onclick="pressKey('OK')"></button>
+      </div>
+    </div>
+
+    <!-- SAYFA 2: KUTULAR -->
+    <div id="page2" class="page">
+      <div class="boxes-container">
+        <div class="box-clickable" onclick="openBox(3)"></div>
+        <div class="box-clickable" onclick="openBox(4)"></div>
+        <div class="box-clickable" onclick="openBox(5)"></div>
+        <div class="box-clickable" onclick="openBox(6)"></div>
+      </div>
+    </div>
+
+    <!-- SAYFA 3: DRAGONBALL -->
+    <div id="page3" class="page">
+      <button class="back-btn" onclick="goToPage(2)">← Geri Dön</button>
+    </div>
+
+    <!-- SAYFA 4: MEKTUP -->
+    <div id="page4" class="page">
+      <button class="back-btn" onclick="goToPage(2)">← Geri Dön</button>
+    </div>
+
+    <!-- SAYFA 5: PLAYLIST -->
+    <div id="page5" class="page">
+      <button class="back-btn" onclick="goToPage(2); stopMusic();">← Geri Dön</button>
+      <div id="vinylBtn" class="vinyl-click-area" onclick="toggleMusic()"></div>
+    </div>
+
+    <!-- SAYFA 6: OYUN -->
+    <div id="page6" class="page">
+      <button class="back-btn" onclick="goToPage(2); stopGame();">← Geri Dön</button>
+      <div class="game-box" id="gameArea">
+        <div class="game-score" id="scoreBoard">Yakalanan Kalp: 0 / 5</div>
+        <div class="game-win-text" id="winText">YOU WON MY HEART ❤️</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Müzik Çalar -->
+  <audio id="bgMusic" src="lovesong.mp3" loop></audio>
+
+  <script>
+    // --- GENEL SAYFA YÖNETİMİ ---
+    function goToPage(pageNum) {
+      document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+      document.getElementById('page' + pageNum).classList.add('active');
+
+      if (pageNum === 6) {
+        startGame();
+      } else {
+        stopGame();
+      }
+    }
+
+    function openBox(pageNum) {
+      goToPage(pageNum);
+    }
+
+    // --- SAYFA 1: ŞİFRE MANTIĞI ---
+    let enteredPin = "";
+    const correctPin = "0807";
+
+    function pressKey(key) {
+      if (key === 'X') {
+        enteredPin = enteredPin.slice(0, -1);
+      } else if (key === 'OK') {
+        checkPin();
+        return;
+      } else {
+        if (enteredPin.length < 4) {
+          enteredPin += key;
+        }
+      }
+
+      updateHearts();
+
+      if (enteredPin.length === 4) {
+        setTimeout(checkPin, 200);
+      }
+    }
+
+    function updateHearts() {
+      for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById('dot' + i);
+        if (i <= enteredPin.length) {
+          dot.classList.add('filled');
+        } else {
+          dot.classList.remove('filled');
+        }
+      }
+    }
+
+    function checkPin() {
+      if (enteredPin === correctPin) {
+        goToPage(2);
+        enteredPin = "";
+        updateHearts();
+      } else {
+        const page1 = document.getElementById('page1');
+        page1.classList.add('shake');
+        setTimeout(() => page1.classList.remove('shake'), 400);
+        enteredPin = "";
+        updateHearts();
+      }
+    }
+
+    // --- SAYFA 5: MÜZİK MANTIĞI ---
+    const music = document.getElementById('bgMusic');
+    const vinyl = document.getElementById('vinylBtn');
+
+    function toggleMusic() {
+      if (music.paused) {
+        music.play();
+        vinyl.classList.add('spinning');
+      } else {
+        music.pause();
+        vinyl.classList.remove('spinning');
+      }
+    }
+
+    function stopMusic() {
+      music.pause();
+      music.currentTime = 0;
+      vinyl.classList.remove('spinning');
+    }
+
+    // --- SAYFA 6: OYUN MANTIĞI ---
+    let score = 0;
+    let heartInterval = null;
+    let activeHeart = null;
+
+    function startGame() {
+      score = 0;
+      document.getElementById('scoreBoard').style.display = 'block';
+      document.getElementById('scoreBoard').innerText = `Yakalanan Kalp: ${score} / 5`;
+      document.getElementById('winText').style.display = 'none';
+      
+      clearHearts();
+      spawnHeart();
+    }
+
+    function clearHearts() {
+      if (activeHeart) activeHeart.remove();
+      if (heartInterval) clearInterval(heartInterval);
+    }
+
+    function stopGame() {
+      clearHearts();
+    }
+
+    function spawnHeart() {
+      const gameArea = document.getElementById('gameArea');
+      if (score >= 5) return;
+
+      if (activeHeart) activeHeart.remove();
+
+      const heart = document.createElement('div');
+      heart.className = 'floating-heart';
+      heart.innerText = '💖';
+
+      // Rastgele Konumlama (Kutu içinde kalacak şekilde)
+      const maxX = gameArea.clientWidth - 50;
+      const maxY = gameArea.clientHeight - 60;
+      
+      const randomX = Math.max(10, Math.floor(Math.random() * maxX));
+      const randomY = Math.max(40, Math.floor(Math.random() * maxY));
+
+      heart.style.left = randomX + 'px';
+      heart.style.top = randomY + 'px';
+
+      // Yakalama Tıklaması
+      heart.onclick = function() {
+        score++;
+        document.getElementById('scoreBoard').innerText = `Yakalanan Kalp: ${score} / 5`;
+        heart.remove();
+
+        if (score >= 5) {
+          document.getElementById('scoreBoard').style.display = 'none';
+          document.getElementById('winText').style.display = 'block';
+          if (heartInterval) clearInterval(heartInterval);
+        } else {
+          spawnHeart();
+        }
+      };
+
+      gameArea.appendChild(activeHeart = heart);
+
+      // Kalbin kaçma hızı (Sürekli yer değiştirir)
+      if (heartInterval) clearInterval(heartInterval);
+      heartInterval = setInterval(() => {
+        if (score < 5) spawnHeart();
+      }, 700); // 700ms - Hızlı ve yakalaması tatlı zorlukta
+    }
+  </script>
+</body>
+</html>
